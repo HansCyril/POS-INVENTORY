@@ -43,230 +43,127 @@ export default function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
   const processCommand = async (userInput: string): Promise<string> => {
     const input = userInput.toLowerCase().trim();
     
-    // ACTION: Clear cart
-    if (input === 'clear cart' || input === 'empty cart' || input === 'clear basket' || input === 'empty basket') {
-      if (cart.length === 0) {
-        return "Your cart is already empty!";
-      }
-      clearCart();
-      return "✅ I've cleared all items from your cart.";
+    // Help Center
+    if (input.includes('help') || input.includes('how') || input.includes('what can') || input === '?') {
+      return `🤖 **I can help you with these tasks:**\n\n` +
+             `🛒 **Cart Actions:**\n` +
+             `• "Add 2 apples to cart"\n` +
+             `• "Show my cart"\n` +
+             `• "Clear my basket"\n\n` +
+             `📦 **Inventory:**\n` +
+             `• "Check stock of Laptop"\n` +
+             `• "Price of Coffee"\n` +
+             `• "What is low on stock?"\n\n` +
+             `💰 **Sales & Trends:**\n` +
+             `• "How much did we sell today?"\n` +
+             `• "Show total revenue"\n` +
+             `• "Generate a receipt preview"`;
     }
 
-    // ACTION: Add to cart (e.g., "add 2 mangoes to cart", "add apple")
-    if (input.startsWith('add ')) {
-      // Very basic natural language parsing: "add [qty] [item] to cart"
-      const match = input.match(/add\s+(\d+)?\s*(.*?)(?:\s+to\s+cart|\s+to\s+basket)?$/i);
-      
+    // ACTION: Clear cart
+    if (input.match(/clear|empty|reset\s+(cart|basket)/)) {
+      if (cart.length === 0) return "🏷️ Your cart is already empty!";
+      clearCart();
+      return "✅ **Success:** I've completely cleared your shopping cart.";
+    }
+
+    // ACTION: Add to cart
+    if (input.match(/^add\s+/)) {
+      const match = input.match(/add\s+(\d+)?\s*(.*?)(?:\s+to\s+cart|\s+to\s+basket)?$/);
       if (match && match[2]) {
-        const qtyStr = match[1];
-        const itemName = match[2];
-        let quantity = qtyStr ? parseInt(qtyStr, 10) : 1;
+        const quantity = parseInt(match[1] || '1', 10);
+        const query = match[2].trim();
         
-        // Find the product
-        const product = products.find(p => itemName.includes(p.name.toLowerCase()) || p.name.toLowerCase().includes(itemName));
+        const product = products.find(p => 
+          p.name.toLowerCase().includes(query) || 
+          query.includes(p.name.toLowerCase()) ||
+          p.sku.toLowerCase() === query
+        );
         
         if (product) {
-          if (product.stock === 0) {
-            return `Sorry, ${product.name} is currently out of stock.`;
-          }
+          if (product.stock <= 0) return `❌ Sorry, **${product.name}** is currently out of stock.`;
+          const actualAdd = Math.min(quantity, product.stock);
+          for(let i=0; i<actualAdd; i++) addToCart(product);
           
-          if (quantity > product.stock) {
-            quantity = product.stock;
-            addToCart(product); // addToCart currently adds 1, we'd need loop or store update to add multiple
-            // Since store addToCart only increments by 1 if exists or adds 1 if not, we'll loop it
-            for(let i=1; i<quantity; i++) addToCart(product);
-            
-            return `✅ I could only add ${quantity}x ${product.name} to your cart because that's all the stock we have left.`;
-          }
-
-          // Add to cart multiple times if qty > 1
-          for(let i=0; i<quantity; i++) {
-             addToCart(product);
-          }
-          
-          return `✅ Added ${quantity}x ${product.name} to your cart!`;
-        } else {
-           return `I couldn't find a product matching "${itemName}". You can type "show products" to see what we have.`;
+          return actualAdd < quantity 
+            ? `⚠️ I could only add **${actualAdd}x ${product.name}** (stock limit reached).`
+            : `✅ Successfully added **${actualAdd}x ${product.name}** to your cart.`;
         }
+        return `🔍 I couldn't find any product matching "${query}". Try checking your spelling.`;
       }
     }
     
-    // Cart and total calculations
-    if (input.includes('total') || input.includes('how much') || input.includes('sum') || input.includes('compute')) {
-      if (cart.length === 0) {
-        return "Your cart is currently empty. Add some products to see the total.";
-      }
-      
-      const subtotal = cart.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
-      const tax = subtotal * APP_CONFIG.taxRate;
-      const grandTotal = subtotal + tax;
-      
-      let response = `📊 Cart Total Calculation:\n\n`;
-      response += `Items in Cart:\n`;
-      cart.forEach(item => {
-        response += `• ${item.product.name} x${item.quantity} = ₱${(item.product.price * item.quantity).toFixed(2)}\n`;
-      });
-      response += `\nSubtotal: ₱${subtotal.toFixed(2)}\n`;
-      response += `Tax (12%): ₱${tax.toFixed(2)}\n`;
-      response += `Grand Total: ₱${grandTotal.toFixed(2)}`;
-      
-      if (input.includes('receipt')) {
-        response += `\n\n🧾 Would you like me to generate a full receipt? Just say "generate receipt" or "show receipt"!`;
-      }
-      
-      return response;
-    }
-    
-    // Generate receipt
-    if (input.includes('receipt') || input.includes('generate') || input.includes('print')) {
-      if (cart.length === 0) {
-        return "Your cart is empty. Add some products first to generate a receipt.";
-      }
-      
-      const subtotal = cart.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
-      const tax = subtotal * APP_CONFIG.taxRate;
-      const grandTotal = subtotal + tax;
-      
-      const receiptId = 'REP-' + Date.now().toString(36).toUpperCase();
-      const date = new Date().toLocaleString('en-PH');
-      
-      let receipt = `🧾 RECEIPT\n`;
-      receipt += `━━━━━━━━━━━━━━━━━━━━\n`;
-      receipt += `Receipt #: ${receiptId}\n`;
-      receipt += `Date: ${date}\n`;
-      receipt += `━━━━━━━━━━━━━━━━━━━━\n\n`;
-      receipt += `ITEMS:\n`;
-      cart.forEach(item => {
-        const itemTotal = item.product.price * item.quantity;
-        receipt += `${item.product.name}\n`;
-        receipt += `  ${item.quantity} x ₱${item.product.price.toFixed(2)} = ₱${itemTotal.toFixed(2)}\n`;
-      });
-      receipt += `\n━━━━━━━━━━━━━━━━━━━━\n`;
-      receipt += `Subtotal: ₱${subtotal.toFixed(2)}\n`;
-      receipt += `Tax (12%): ₱${tax.toFixed(2)}\n`;
-      receipt += `TOTAL: ₱${grandTotal.toFixed(2)}\n`;
-      receipt += `━━━━━━━━━━━━━━━━━━━━\n\n`;
-      receipt += `*Thank you for your purchase!*`;
-      
-      return receipt;
-    }
-    
-    // Product inquiries
-    if (input.includes('product') || input.includes('item') || input.includes('stock') || input.includes('price')) {
-      // Find specific product
-      const productName = products.find(p => input.includes(p.name.toLowerCase()));
-      if (productName) {
-        const category = categories.find(c => c.id === productName.categoryId);
-        return `📦 Product Details:\n\nName: ${productName.name}\nSKU: ${productName.sku}\nPrice: ₱${productName.price.toFixed(2)}\nStock: ${productName.stock} units\nCategory: ${category?.name || 'Uncategorized'}\n${productName.description ? `Description: ${productName.description}` : ''}\n${productName.stock <= productName.minStock ? '\n⚠️ Warning: Stock is below minimum level!' : ''}`;
-      }
-      
-      // List all products
-      let response = `📦 Available Products (${products.length}):\n\n`;
-      products.filter(p => p.stock > 0).forEach(p => {
-        const category = categories.find(c => c.id === p.categoryId);
-        response += `• ${p.name} - ₱${p.price.toFixed(2)} (Stock: ${p.stock}) [${category?.name}]\n`;
-      });
-      response += `\nAsk about a specific product for more details!`;
-      return response;
-    }
-    
-    // Category inquiries
-    if (input.includes('categories') || input.includes('category list')) {
-      let response = `📂 Categories:\n\n`;
-      categories.forEach(c => {
-        const productCount = products.filter(p => p.categoryId === c.id).length;
-        response += `• ${c.name} - ${productCount} products\n`;
-      });
-      return response;
-    }
-    
-    // Sales/History
-    if (input.includes('sale') || input.includes('transaction') || input.includes('history') || input.includes('today')) {
-      const today = new Date().toDateString();
-      const todaySales = sales.filter(s => new Date(s.createdAt).toDateString() === today);
-      const todayTotal = todaySales.reduce((sum, s) => sum + s.grandTotal, 0);
-      
-      let response = `💰 Sales Information:\n\n`;
-      response += `Total Sales Today: ₱${todayTotal.toFixed(2)}\n`;
-      response += `Transactions Today: ${todaySales.length}\n`;
-      response += `All Time Sales: ₱${sales.reduce((sum, s) => sum + s.grandTotal, 0).toFixed(2)}\n`;
-      
-      if (todaySales.length > 0) {
-        response += `\nRecent Transactions:\n`;
-        todaySales.slice(0, 5).forEach((s, i) => {
-          response += `${i + 1}. ₱${s.grandTotal.toFixed(2)} - ${new Date(s.createdAt).toLocaleTimeString('en-PH')}\n`;
-        });
-      }
-      
-      return response;
-    }
-    
-    // Cart info
-    if (input.includes('cart') || input.includes('basket')) {
-      if (cart.length === 0) {
-        return "Your cart is empty. Click on products in the grid to add them to your cart.";
-      }
-      
-      let response = `🛒 Cart Contents:\n\n`;
-      cart.forEach(item => {
-        response += `• ${item.product.name} x${item.quantity} = ₱${(item.product.price * item.quantity).toFixed(2)}\n`;
-      });
-      response += `\nSay "show total" or "compute total" to see the final amount!`;
-      
-      return response;
-    }
-    
-    // Help
-    if (input.includes('help') || input.includes('how') || input.includes('what can')) {
-      return `❓ POS System Help:\n\n
-Adding Products:
-• Click on a product card to add it to the cart
-• Use the +/- buttons to adjust quantity
-• Say "add 2 apples" to have me add it for you
-
-Checkout:
-• Select payment method (Cash, Card, GCash)
-• For cash, enter amount received
-• Click "Complete Sale" to process
-
-AI Assistant Commands:
-• "show products" - List all products
-• "add [item]" - Add item to cart
-• "clear cart" - Empty the cart
-• "compute total" - Calculate cart total
-• "generate receipt" - Create receipt
-• "show sales" - View sales history
-• "show categories" - List categories
-
-Other Features:
-• Search products using the search bar
-• Filter by category using the pills
-• Apply discounts before checkout`;
-    }
-    
-    // Inventory status
-    if (input.includes('inventory') || input.includes('low stock') || input.includes('out of stock')) {
+    // BUSINESS INSIGHTS: Low Stock
+    if (input.includes('low') || input.includes('alert') || input.includes('empty') || input.includes('inventory')) {
       const lowStock = products.filter(p => p.stock <= p.minStock);
-      const outOfStock = products.filter(p => p.stock === 0);
       
-      let response = `📊 Inventory Status:\n\n`;
-      response += `Total Products: ${products.length}\n`;
-      response += `In Stock: ${products.filter(p => p.stock > 0).length}\n`;
-      response += `Low Stock: ${lowStock.length}\n`;
-      response += `Out of Stock: ${outOfStock.length}\n`;
-      
+      let res = `📊 **Inventory Status:**\n`;
+      res += `• Total Products: ${products.length}\n`;
+      res += `• In Stock: ${products.filter(p => p.stock > 0).length}\n`;
+      res += `• Out of Stock: ${products.filter(p => p.stock === 0).length}\n\n`;
+
       if (lowStock.length > 0) {
-        response += `\n⚠️ Low Stock Items:\n`;
+        res += `⚠️ **Low Stock Alerts:**\n`;
         lowStock.forEach(p => {
-          response += `• ${p.name}: ${p.stock} left (min: ${p.minStock})\n`;
+          res += `• **${p.name}**: ${p.stock} units left\n`;
         });
+      } else {
+        res += `✅ All items are well-stocked!`;
       }
-      
-      return response;
+      return res;
     }
-    
-    // Default response
-    return `I understand you're asking about: "${userInput}"\n\nI'm not sure about that, but here are things I can help with:\n\n• Actions - Ask "add 2 apples" or "clear cart"\n• Products - Ask "show products" or "what items do you have"\n• Cart - Ask "show cart" or "what's in my basket"\n• Total - Ask "what's the total" or "compute total"\n• Receipt - Ask "generate receipt" or "show receipt"\n• Sales - Ask "show sales" or "how much did we sell today"\n• Help - Ask "help" for more commands\n\nHow can I assist you?`;
+
+    // REVENUE & SALES INFO
+    if (input.includes('revenue') || input.includes('sell') || input.includes('sale') || input.includes('income')) {
+      const today = new Date().toDateString();
+      const tSales = sales.filter(s => new Date(s.createdAt).toDateString() === today);
+      const tRev = tSales.reduce((sum, s) => sum + s.grandTotal, 0);
+      
+      let res = `💰 **Business Performance:**\n\n`;
+      res += `• **Today's Revenue:** ${APP_CONFIG.currency.symbol}${tRev.toLocaleString()}\n`;
+      res += `• **Transaction Count:** ${tSales.length}\n`;
+      res += `• **Total Products Sold:** ${tSales.reduce((sum, s) => sum + (s.items?.length || 0), 0)}\n\n`;
+      
+      if (tRev > 0) res += `📈 Great job! You have active sales today.`;
+      else res += `☕ No transactions recorded yet today.`;
+      
+      return res;
+    }
+
+    // PRICE & INFO CHECK
+    if (input.includes('price') || input.includes('cost') || input.includes('stock of') || input.includes('how many')) {
+      const query = input.replace(/price of|cost of|stock of|check|how many/g, '').trim();
+      const p = products.find(p => p.name.toLowerCase().includes(query) || query.includes(p.name.toLowerCase()));
+      
+      if (p) {
+        const cat = categories.find(c => c.id === p.categoryId);
+        return `📄 **Product Details:**\n\n` +
+               `• **Name:** ${p.name}\n` +
+               `• **Price:** ${APP_CONFIG.currency.symbol}${p.price.toFixed(2)}\n` +
+               `• **Stock:** ${p.stock} units\n` +
+               `• **Category:** ${cat?.name || 'General'}\n` +
+               `• **SKU:** ${p.sku}`;
+      }
+    }
+
+    // RECEIPT PREVIEW
+    if (input.includes('receipt') || input.includes('preview')) {
+      if (cart.length === 0) return "🛒 Your cart is empty. Add items to see a receipt preview.";
+      
+      const sub = cart.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
+      const total = sub + (sub * APP_CONFIG.taxRate);
+      
+      let res = `🧾 **Receipt Preview:**\n`;
+      res += `━━━━━━━━━━━━━━━━━━━━\n`;
+      cart.forEach(i => res += `${i.product.name} x${i.quantity} ... ${APP_CONFIG.currency.symbol}${(i.product.price * i.quantity).toFixed(2)}\n`);
+      res += `━━━━━━━━━━━━━━━━━━━━\n`;
+      res += `**TOTAL: ${APP_CONFIG.currency.symbol}${total.toFixed(2)}**\n`;
+      res += `━━━━━━━━━━━━━━━━━━━━`;
+      return res;
+    }
+
+    // DEFAULT
+    return `🤔 I'm not sure about that. \n\nTry asking about **prices**, **stock levels**, **revenue**, or say **"add 1 laptop to cart"**.`;
   };
 
   const handleSend = async () => {
