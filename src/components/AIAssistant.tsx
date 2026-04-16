@@ -45,16 +45,16 @@ export default function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
     
     // Help Center
     if (input.includes('help') || input.includes('how') || input.includes('what can') || input === '?') {
-      return `🤖 **I can help you with these tasks:**\n\n` +
-             `🛒 **Cart Actions:**\n` +
+      return `🤖 I can help you with these tasks:\n\n` +
+             `🛒 Cart Actions:\n` +
              `• "Add 2 apples to cart"\n` +
              `• "Show my cart"\n` +
              `• "Clear my basket"\n\n` +
-             `📦 **Inventory:**\n` +
+             `📦 Inventory:\n` +
              `• "Check stock of Laptop"\n` +
              `• "Price of Coffee"\n` +
              `• "What is low on stock?"\n\n` +
-             `💰 **Sales & Trends:**\n` +
+             `💰 Sales & Trends:\n` +
              `• "How much did we sell today?"\n` +
              `• "Show total revenue"\n` +
              `• "Generate a receipt preview"`;
@@ -64,7 +64,7 @@ export default function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
     if (input.match(/clear|empty|reset\s+(cart|basket)/)) {
       if (cart.length === 0) return "🏷️ Your cart is already empty!";
       clearCart();
-      return "✅ **Success:** I've completely cleared your shopping cart.";
+      return "✅ Success: I've completely cleared your shopping cart.";
     }
 
     // ACTION: Add to cart
@@ -81,13 +81,13 @@ export default function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
         );
         
         if (product) {
-          if (product.stock <= 0) return `❌ Sorry, **${product.name}** is currently out of stock.`;
+          if (product.stock <= 0) return `❌ Sorry, ${product.name} is currently out of stock.`;
           const actualAdd = Math.min(quantity, product.stock);
           for(let i=0; i<actualAdd; i++) addToCart(product);
           
           return actualAdd < quantity 
-            ? `⚠️ I could only add **${actualAdd}x ${product.name}** (stock limit reached).`
-            : `✅ Successfully added **${actualAdd}x ${product.name}** to your cart.`;
+            ? `⚠️ I could only add ${actualAdd}x ${product.name} (stock limit reached).`
+            : `✅ Successfully added ${actualAdd}x ${product.name} to your cart.`;
         }
         return `🔍 I couldn't find any product matching "${query}". Try checking your spelling.`;
       }
@@ -97,15 +97,15 @@ export default function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
     if (input.includes('low') || input.includes('alert') || input.includes('empty') || input.includes('inventory')) {
       const lowStock = products.filter(p => p.stock <= p.minStock);
       
-      let res = `📊 **Inventory Status:**\n`;
+      let res = `📊 Inventory Status:\n`;
       res += `• Total Products: ${products.length}\n`;
       res += `• In Stock: ${products.filter(p => p.stock > 0).length}\n`;
       res += `• Out of Stock: ${products.filter(p => p.stock === 0).length}\n\n`;
 
       if (lowStock.length > 0) {
-        res += `⚠️ **Low Stock Alerts:**\n`;
+        res += `⚠️ Low Stock Alerts:\n`;
         lowStock.forEach(p => {
-          res += `• **${p.name}**: ${p.stock} units left\n`;
+          res += `• ${p.name}: ${p.stock} units left\n`;
         });
       } else {
         res += `✅ All items are well-stocked!`;
@@ -119,10 +119,10 @@ export default function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
       const tSales = sales.filter(s => new Date(s.createdAt).toDateString() === today);
       const tRev = tSales.reduce((sum, s) => sum + s.grandTotal, 0);
       
-      let res = `💰 **Business Performance:**\n\n`;
-      res += `• **Today's Revenue:** ${APP_CONFIG.currency.symbol}${tRev.toLocaleString()}\n`;
-      res += `• **Transaction Count:** ${tSales.length}\n`;
-      res += `• **Total Products Sold:** ${tSales.reduce((sum, s) => sum + (s.items?.length || 0), 0)}\n\n`;
+      let res = `💰 Business Performance:\n\n`;
+      res += `• Today's Revenue: ${APP_CONFIG.currency.symbol}${tRev.toLocaleString()}\n`;
+      res += `• Transaction Count: ${tSales.length}\n`;
+      res += `• Total Products Sold: ${tSales.reduce((sum, s) => sum + (s.items?.length || 0), 0)}\n\n`;
       
       if (tRev > 0) res += `📈 Great job! You have active sales today.`;
       else res += `☕ No transactions recorded yet today.`;
@@ -137,12 +137,12 @@ export default function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
       
       if (p) {
         const cat = categories.find(c => c.id === p.categoryId);
-        return `📄 **Product Details:**\n\n` +
-               `• **Name:** ${p.name}\n` +
-               `• **Price:** ${APP_CONFIG.currency.symbol}${p.price.toFixed(2)}\n` +
-               `• **Stock:** ${p.stock} units\n` +
-               `• **Category:** ${cat?.name || 'General'}\n` +
-               `• **SKU:** ${p.sku}`;
+        return `📄 Product Details:\n\n` +
+               `• Name: ${p.name}\n` +
+               `• Price: ${APP_CONFIG.currency.symbol}${p.price.toFixed(2)}\n` +
+               `• Stock: ${p.stock} units\n` +
+               `• Category: ${cat?.name || 'General'}\n` +
+               `• SKU: ${p.sku}`;
       }
     }
 
@@ -153,17 +153,17 @@ export default function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
       const sub = cart.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
       const total = sub + (sub * APP_CONFIG.taxRate);
       
-      let res = `🧾 **Receipt Preview:**\n`;
+      let res = `🧾 Receipt Preview:\n`;
       res += `━━━━━━━━━━━━━━━━━━━━\n`;
       cart.forEach(i => res += `${i.product.name} x${i.quantity} ... ${APP_CONFIG.currency.symbol}${(i.product.price * i.quantity).toFixed(2)}\n`);
       res += `━━━━━━━━━━━━━━━━━━━━\n`;
-      res += `**TOTAL: ${APP_CONFIG.currency.symbol}${total.toFixed(2)}**\n`;
+      res += `TOTAL: ${APP_CONFIG.currency.symbol}${total.toFixed(2)}\n`;
       res += `━━━━━━━━━━━━━━━━━━━━`;
       return res;
     }
 
     // DEFAULT
-    return `🤔 I'm not sure about that. \n\nTry asking about **prices**, **stock levels**, **revenue**, or say **"add 1 laptop to cart"**.`;
+    return `🤔 I'm not sure about that. \n\nTry asking about prices, stock levels, revenue, or say "add 1 laptop to cart".`;
   };
 
   const handleSend = async () => {
