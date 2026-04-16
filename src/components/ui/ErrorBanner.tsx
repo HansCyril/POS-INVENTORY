@@ -16,7 +16,7 @@ export default function ErrorBanner({ message, onRetry }: ErrorBannerProps) {
         <p className="text-sm font-black text-slate-900 dark:text-rose-200 uppercase tracking-tight">System Notice</p>
         <p className="text-xs text-slate-500 dark:text-rose-400/80 mt-1 leading-relaxed">
           {typeof message === 'object' && message !== null
-            ? (message as any).message || JSON.stringify(message)
+            ? (message as { message?: string }).message || JSON.stringify(message)
             : message}
         </p>
       </div>

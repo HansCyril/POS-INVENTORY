@@ -66,7 +66,7 @@ export const usePOSStore = create<POSStore>()(
 
           console.log('Categories fetched:', data?.length || 0);
 
-          const categories: Category[] = (data || []).map((cat: Record<string, unknown>) => ({
+          const categories: Category[] = (data || []).map((cat: any) => ({
             id: String(cat.id),
             name: String(cat.name),
             color: String(cat.color),
@@ -74,7 +74,7 @@ export const usePOSStore = create<POSStore>()(
           }));
 
           set({ categories, loading: false });
-        } catch (err: any) {
+        } catch (err) {
           console.error('Fetch categories failed, using mock data:', err);
           const mockCategories: Category[] = [];
           set({ categories: mockCategories, loading: false, error: null, demoMode: true });
@@ -103,8 +103,8 @@ export const usePOSStore = create<POSStore>()(
             categories: [...state.categories, newCategory],
             loading: false
           }));
-        } catch (err: any) {
-          set({ error: err.message || String(err), loading: false });
+        } catch (err) {
+          set({ error: (err instanceof Error ? err.message : String(err)), loading: false });
         }
       },
 
@@ -124,8 +124,8 @@ export const usePOSStore = create<POSStore>()(
             ),
             loading: false
           }));
-        } catch (err: any) {
-          set({ error: err.message || String(err), loading: false });
+        } catch (err) {
+          set({ error: (err instanceof Error ? err.message : String(err)), loading: false });
         }
       },
 
@@ -143,8 +143,8 @@ export const usePOSStore = create<POSStore>()(
             categories: state.categories.filter((c) => c.id !== id),
             loading: false
           }));
-        } catch (err: any) {
-          set({ error: err.message || String(err), loading: false });
+        } catch (err) {
+          set({ error: (err instanceof Error ? err.message : String(err)), loading: false });
         }
       },
 
@@ -158,7 +158,7 @@ export const usePOSStore = create<POSStore>()(
 
           if (error) throw error;
 
-          const products: Product[] = (data || []).map((prod: Record<string, unknown>) => ({
+          const products: Product[] = (data || []).map((prod: any) => ({
             id: String(prod.id),
             name: String(prod.name),
             sku: String(prod.sku),
@@ -174,7 +174,7 @@ export const usePOSStore = create<POSStore>()(
           }));
 
           set({ products, loading: false });
-        } catch (err: any) {
+        } catch (err) {
           console.error('Fetch products failed, using mock data:', err);
           const mockProducts: Product[] = [];
           set({ products: mockProducts, loading: false, error: null, demoMode: true });
@@ -221,15 +221,15 @@ export const usePOSStore = create<POSStore>()(
             products: [...state.products, newProduct],
             loading: false
           }));
-        } catch (err: any) {
-          set({ error: err.message || String(err), loading: false });
+        } catch (err) {
+          set({ error: (err instanceof Error ? err.message : String(err)), loading: false });
         }
       },
 
       updateProduct: async (id, prod) => {
         set({ loading: true, error: null });
         try {
-          const updateData: Record<string, unknown> = {};
+          const updateData: any = {};
           if (prod.name !== undefined) updateData.name = prod.name;
           if (prod.sku !== undefined) updateData.sku = prod.sku;
           if (prod.price !== undefined) updateData.price = prod.price;
@@ -254,8 +254,8 @@ export const usePOSStore = create<POSStore>()(
             ),
             loading: false
           }));
-        } catch (err: any) {
-          set({ error: err.message || String(err), loading: false });
+        } catch (err) {
+          set({ error: (err instanceof Error ? err.message : String(err)), loading: false });
         }
       },
 
@@ -273,8 +273,8 @@ export const usePOSStore = create<POSStore>()(
             products: state.products.filter((p) => p.id !== id),
             loading: false
           }));
-        } catch (err: any) {
-          set({ error: err.message || String(err), loading: false });
+        } catch (err) {
+          set({ error: (err instanceof Error ? err.message : String(err)), loading: false });
         }
       },
 
@@ -386,7 +386,7 @@ export const usePOSStore = create<POSStore>()(
           }));
 
           set({ sales: formattedSales, loading: false });
-        } catch (err: any) {
+        } catch (err) {
           console.error('Fetch sales failed, using mock data:', err);
           const mockSales: Sale[] = [];
           set({ sales: mockSales, loading: false, error: null, demoMode: true });
@@ -470,8 +470,8 @@ export const usePOSStore = create<POSStore>()(
             cart: [],
             loading: false
           }));
-        } catch (err: any) {
-          set({ error: err.message || String(err), loading: false });
+        } catch (err) {
+          set({ error: (err instanceof Error ? err.message : String(err)), loading: false });
         }
       },
     }),
