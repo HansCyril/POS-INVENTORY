@@ -4,7 +4,7 @@ import { usePOSStore } from '@/lib/store';
 import { APP_CONFIG, formatCurrency } from '@/lib/config';
 import ErrorBanner from '@/components/ui/ErrorBanner';
 import Image from 'next/image';
-import { ShoppingCart, Plus, Minus, Search, CreditCard, Banknote, Smartphone, Receipt, X, CheckCircle } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Search, CreditCard, Banknote, Smartphone, Receipt, X, CheckCircle, TrendingUp } from 'lucide-react';
 
 type PaymentMethod = 'cash' | 'card' | 'gcash';
 
@@ -225,16 +225,6 @@ export default function POSPage() {
             <div className="flex flex-col items-center justify-center py-20 bg-slate-900/10 dark:bg-slate-900/40 rounded-[32px] border border-dashed border-slate-700/20">
               <ShoppingCart className="w-10 h-10 text-slate-300 dark:text-slate-700 mb-4" />
               <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">No products match your criteria</p>
-            </div>
-          )}
-        </div>
-          {filteredProducts.length === 0 && (
-            <div className="col-span-full flex flex-col items-center justify-center py-20 bg-slate-900/40 rounded-[40px] border border-dashed border-slate-700/50">
-              <div className="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center mb-6 text-slate-600">
-                <ShoppingCart className="w-10 h-10" />
-              </div>
-              <p className="text-lg font-black text-white uppercase tracking-tighter">No items found</p>
-              <p className="text-xs text-slate-500 mt-1 uppercase tracking-widest font-bold">Try adjusting your search</p>
             </div>
           )}
         </div>
