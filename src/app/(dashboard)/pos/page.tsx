@@ -136,7 +136,7 @@ export default function POSPage() {
         </div>
 
         {/* Product Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 3xl:grid-cols-10 gap-2 overflow-y-auto flex-1 pb-4 scrollbar-thin">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-5 overflow-y-auto flex-1 pb-6 scrollbar-thin">
           {filteredProducts.map((p) => {
             const cat = categories.find((c) => c.id === p.categoryId);
             const cartItem = cart.find((i) => i.product.id === p.id);
@@ -147,87 +147,80 @@ export default function POSPage() {
                 key={p.id}
                 onClick={() => addToCart(p)}
                 disabled={isOutOfStock}
-                className={`group relative flex flex-col bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/40 rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-indigo-500/40 ${
+                className={`group relative aspect-[4/5] flex flex-col items-center justify-center bg-slate-900/60 border border-white/5 rounded-[32px] overflow-hidden transition-all duration-500 shadow-2xl hover:shadow-indigo-500/20 hover:-translate-y-2 ${
                   isOutOfStock ? 'opacity-60 grayscale-[0.5] cursor-not-allowed' : 'active:scale-95'
                 }`}
               >
-                {/* Product Image Section - Compact */}
-                <div className="relative h-24 sm:h-28 w-full bg-slate-50 dark:bg-slate-900/50 overflow-hidden border-b border-slate-100 dark:border-white/5">
+                {/* Background Product Image */}
+                <div className="absolute inset-0 w-full h-full">
                   {p.image ? (
-                    <Image 
-                      src={p.image} 
-                      alt={p.name} 
-                      fill 
-                      className="object-cover transition-transform duration-500 group-hover:scale-110" 
-                      unoptimized={p.image.startsWith('http')}
-                    />
+                    <>
+                      <Image 
+                        src={p.image} 
+                        alt={p.name} 
+                        fill 
+                        className="object-contain p-4 opacity-40 group-hover:opacity-60 group-hover:scale-110 transition-all duration-700 ease-out" 
+                        unoptimized={p.image.startsWith('http')}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-b from-slate-900/40 via-slate-900/80 to-slate-900"></div>
+                    </>
                   ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-2xl opacity-20 group-hover:scale-110 transition-transform duration-500" style={{ color: cat?.color }}>
-                      🛒
-                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center text-7xl opacity-5">🛒</div>
                   )}
-                  
-                  {/* Category Indicator - Mini */}
+                </div>
+
+                {/* Centered Content Overlay */}
+                <div className="relative z-10 flex flex-col items-center text-center px-4 w-full h-full pt-12 pb-6">
+                  {/* Category Dot */}
                   {cat && (
-                    <div className="absolute top-1.5 left-1.5 w-2 h-2 rounded-full shadow-sm z-10" style={{ backgroundColor: cat.color }} title={cat.name} />
+                    <div className="absolute top-6 w-2 h-2 rounded-full shadow-[0_0_10px_rgba(0,0,0,0.5)]" style={{ backgroundColor: cat.color }} />
                   )}
 
-                  {/* Stock Badge - Compact */}
-                  <div className={`absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider backdrop-blur-md z-10 border ${
-                    p.stock <= p.minStock ? 'bg-rose-500/20 border-rose-500/30 text-rose-600 dark:text-rose-400' : 'bg-emerald-500/20 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
-                  }`}>
-                    {p.stock - (cartItem?.quantity || 0)}
-                  </div>
-
-                  {/* Cart Indicator Badge */}
+                  {/* Cart Count Badge - Top Right */}
                   {cartItem && (
-                    <div className="absolute top-1.5 right-1.5 bg-indigo-600 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-lg border border-white/20 z-20">
-                      <span className="text-[9px] font-black">{cartItem.quantity}</span>
+                    <div className="absolute top-5 right-6 bg-indigo-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg border border-white/20 animate-in zoom-in duration-300">
+                      <span className="text-[10px] font-black">{cartItem.quantity}</span>
                     </div>
                   )}
-                </div>
 
-                {/* Product Info Section - Compact */}
-                <div className="p-2 flex flex-col flex-1 gap-0.5">
-                  <h4 className="font-bold text-slate-900 dark:text-white text-[10px] leading-tight line-clamp-2 uppercase tracking-tight min-h-[24px]">
-                    {p.name}
-                  </h4>
-                  
-                  <div className="flex items-center justify-between mt-auto">
-                    <div className="flex flex-col">
-                      <span className="font-black text-indigo-600 dark:text-indigo-400 text-xs">
-                        {formatCurrency(p.price)}
-                      </span>
-                      <span className="text-[7px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest truncate max-w-[40px]">
-                        {p.sku}
-                      </span>
-                    </div>
-                    <div className="flex gap-1">
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); setSelectedProduct(p); }}
-                        className="w-5 h-5 rounded-md bg-slate-100 dark:bg-slate-700/50 flex items-center justify-center text-slate-400 hover:bg-indigo-500 hover:text-white transition-all duration-300"
-                      >
-                        <Search className="w-2.5 h-2.5" />
-                      </button>
-                      <div className="w-5 h-5 rounded-md bg-indigo-600 text-white flex items-center justify-center shadow-sm">
-                        <Plus className="w-3 h-3" />
-                      </div>
-                    </div>
+                  <div className="flex flex-col items-center justify-center flex-1">
+                    <h4 className="text-lg font-black text-[#A5B4FC] leading-none uppercase tracking-tighter drop-shadow-md group-hover:text-white transition-colors duration-300 line-clamp-2 mb-1">
+                      {p.name}
+                    </h4>
+                    <span className="text-xs font-bold text-slate-400/80 tracking-widest uppercase mb-4">
+                      {p.sku}
+                    </span>
+                    
+                    <p className="text-2xl font-black text-[#10B981] drop-shadow-[0_4px_12px_rgba(16,185,129,0.3)] mb-4">
+                      {formatCurrency(p.price)}
+                    </p>
+                  </div>
+
+                  {/* Inventory Badge - Pill Style */}
+                  <div className={`mt-auto px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest backdrop-blur-md border transition-all duration-300 ${
+                    p.stock <= p.minStock ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' : 'bg-slate-800/80 border-white/5 text-[#10B981] group-hover:border-indigo-500/30'
+                  }`}>
+                    {p.stock - (cartItem?.quantity || 0)} AVAILABLE
                   </div>
                 </div>
 
-                {/* Hover Glow Effect */}
-                <div className="absolute inset-0 border-2 border-transparent group-hover:border-indigo-500/20 pointer-events-none rounded-xl transition-all duration-300"></div>
+                {/* Inspect Info Trigger (Top Left) */}
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setSelectedProduct(p); }}
+                  className="absolute top-5 left-6 w-8 h-8 rounded-full bg-white/5 backdrop-blur-md flex items-center justify-center text-slate-400 opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-all duration-300 z-20"
+                >
+                  <Search className="w-3.5 h-3.5" />
+                </button>
               </button>
             );
           })}
           {filteredProducts.length === 0 && (
-            <div className="col-span-full flex flex-col items-center justify-center py-20 bg-white/40 dark:bg-slate-800/20 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700/50">
-              <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4 text-slate-300 dark:text-slate-600">
-                <ShoppingCart className="w-8 h-8" />
+            <div className="col-span-full flex flex-col items-center justify-center py-20 bg-slate-900/40 rounded-[40px] border border-dashed border-slate-700/50">
+              <div className="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center mb-6 text-slate-600">
+                <ShoppingCart className="w-10 h-10" />
               </div>
-              <p className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-tight">No products found</p>
-              <p className="text-[10px] text-slate-500 dark:text-slate-500 mt-1 uppercase tracking-widest font-medium">Try adjusting your search or filters</p>
+              <p className="text-lg font-black text-white uppercase tracking-tighter">No items found</p>
+              <p className="text-xs text-slate-500 mt-1 uppercase tracking-widest font-bold">Try adjusting your search</p>
             </div>
           )}
         </div>
