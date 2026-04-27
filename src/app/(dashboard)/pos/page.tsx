@@ -147,7 +147,6 @@ export default function POSPage() {
         <div className="flex-1 overflow-y-auto pb-10 scrollbar-thin px-1">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
             {displayProducts.map((p) => {
-              const cat = categories.find((c) => c.id === p.categoryId);
               const cartItem = cart.find((i) => i.product.id === p.id);
               const isOutOfStock = cartItem && cartItem.quantity >= p.stock;
               
@@ -161,11 +160,12 @@ export default function POSPage() {
                   }`}
                 >
                   {p.image ? (
-                    <img 
+                    <Image 
                       alt={p.name} 
-                      loading="lazy" 
                       src={p.image} 
-                      className="absolute inset-0 w-full h-full object-cover opacity-20 dark:opacity-30 group-hover:opacity-40 dark:group-hover:opacity-50 transition-opacity duration-500" 
+                      fill
+                      className="object-cover opacity-20 dark:opacity-30 group-hover:opacity-40 dark:group-hover:opacity-50 transition-opacity duration-500" 
+                      unoptimized={p.image.startsWith('http')}
                     />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center text-5xl opacity-5">🛒</div>
@@ -439,7 +439,7 @@ export default function POSPage() {
                 <div>
                   <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Internal Description</p>
                   <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium bg-slate-50 dark:bg-slate-800/20 p-4 rounded-2xl border border-slate-100 dark:border-white/5 italic">
-                    "{selectedProduct.description}"
+                    &quot;{selectedProduct.description}&quot;
                   </p>
                 </div>
               )}
