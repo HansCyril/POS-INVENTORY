@@ -18,10 +18,16 @@ export default function POSPage() {
   const [showReceipt, setShowReceipt] = useState<null | { items: { productId: string; productName: string; quantity: number; price: number; subtotal: number; }[]; total: number; tax: number; discount: number; grandTotal: number; paymentMethod: PaymentMethod; amountPaid: number; change: number; }>(null);
   const [selectedProduct, setSelectedProduct] = useState<null | (typeof products)[0]>(null);
 
+  const [visibleCount, setVisibleCount] = useState(20);
+
   useEffect(() => {
     fetchProducts();
     fetchCategories();
   }, [fetchProducts, fetchCategories]);
+
+  useEffect(() => {
+    setVisibleCount(20);
+  }, [search, filterCat]);
 
   useEffect(() => {
     const handleFocus = () => { fetchCategories(); fetchProducts(); };
@@ -44,6 +50,8 @@ export default function POSPage() {
     const matchCat = !filterCat || p.categoryId === filterCat;
     return matchSearch && matchCat && p.stock > 0;
   });
+
+  const displayProducts = filteredProducts.slice(0, visibleCount);
 
   type SaleItem = { productId: string; productName: string; quantity: number; price: number; subtotal: number; };
   type ReceiptData = { items: SaleItem[]; total: number; tax: number; discount: number; grandTotal: number; paymentMethod: PaymentMethod; amountPaid: number; change: number; };
@@ -135,85 +143,91 @@ export default function POSPage() {
           </div>
         </div>
 
-        {/* Product Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-5 overflow-y-auto flex-1 pb-6 scrollbar-thin">
-          {filteredProducts.map((p) => {
-            const cat = categories.find((c) => c.id === p.categoryId);
-            const cartItem = cart.find((i) => i.product.id === p.id);
-            const isOutOfStock = cartItem && cartItem.quantity >= p.stock;
-            
-            return (
-              <button
-                key={p.id}
-                onClick={() => addToCart(p)}
-                disabled={isOutOfStock}
-                className={`group relative aspect-[4/5] flex flex-col items-center justify-center bg-slate-900/60 border border-white/5 rounded-[32px] overflow-hidden transition-all duration-500 shadow-2xl hover:shadow-indigo-500/20 hover:-translate-y-2 ${
-                  isOutOfStock ? 'opacity-60 grayscale-[0.5] cursor-not-allowed' : 'active:scale-95'
-                }`}
-              >
-                {/* Background Product Image */}
-                <div className="absolute inset-0 w-full h-full">
+        {/* Product Grid - Consistent Format */}
+        <div className="flex-1 overflow-y-auto pb-10 scrollbar-thin px-1">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            {displayProducts.map((p) => {
+              const cat = categories.find((c) => c.id === p.categoryId);
+              const cartItem = cart.find((i) => i.product.id === p.id);
+              const isOutOfStock = cartItem && cartItem.quantity >= p.stock;
+              
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => addToCart(p)}
+                  disabled={isOutOfStock}
+                  className={`bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/40 rounded-xl p-3 text-left group relative flex flex-col items-center justify-center text-center overflow-hidden transition-all shadow-sm hover:border-indigo-500/30 ${
+                    isOutOfStock ? 'opacity-60 grayscale-[0.5] cursor-not-allowed' : 'active:scale-95'
+                  }`}
+                >
                   {p.image ? (
-                    <>
-                      <Image 
-                        src={p.image} 
-                        alt={p.name} 
-                        fill 
-                        className="object-contain p-4 opacity-40 group-hover:opacity-60 group-hover:scale-110 transition-all duration-700 ease-out" 
-                        unoptimized={p.image.startsWith('http')}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-b from-slate-900/40 via-slate-900/80 to-slate-900"></div>
-                    </>
+                    <img 
+                      alt={p.name} 
+                      loading="lazy" 
+                      src={p.image} 
+                      className="absolute inset-0 w-full h-full object-cover opacity-20 dark:opacity-30 group-hover:opacity-40 dark:group-hover:opacity-50 transition-opacity duration-500" 
+                    />
                   ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-7xl opacity-5">🛒</div>
+                    <div className="absolute inset-0 flex items-center justify-center text-5xl opacity-5">🛒</div>
                   )}
-                </div>
+                  
+                  <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 dark:from-slate-900 dark:via-slate-900/80 to-transparent"></div>
+                  
+                  {/* Action Overlay */}
+                  <div className="absolute top-2 right-2 flex gap-1 z-20">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setSelectedProduct(p); }}
+                      className="w-6 h-6 rounded-md bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm flex items-center justify-center text-slate-400 hover:text-indigo-500 opacity-0 group-hover:opacity-100 transition-all"
+                    >
+                      <Search className="w-3 h-3" />
+                    </button>
+                    {cartItem && (
+                      <div className="w-6 h-6 rounded-md bg-indigo-500 text-white flex items-center justify-center text-[9px] font-black shadow-lg">
+                        {cartItem.quantity}
+                      </div>
+                    )}
+                  </div>
 
-                {/* Centered Content Overlay */}
-                <div className="relative z-10 flex flex-col items-center text-center px-4 w-full h-full pt-12 pb-6">
-                  {/* Category Dot */}
-                  {cat && (
-                    <div className="absolute top-6 w-2 h-2 rounded-full shadow-[0_0_10px_rgba(0,0,0,0.5)]" style={{ backgroundColor: cat.color }} />
-                  )}
-
-                  {/* Cart Count Badge - Top Right */}
-                  {cartItem && (
-                    <div className="absolute top-5 right-6 bg-indigo-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg border border-white/20 animate-in zoom-in duration-300">
-                      <span className="text-[10px] font-black">{cartItem.quantity}</span>
-                    </div>
-                  )}
-
-                  <div className="flex flex-col items-center justify-center flex-1">
-                    <h4 className="text-lg font-black text-[#A5B4FC] leading-none uppercase tracking-tighter drop-shadow-md group-hover:text-white transition-colors duration-300 line-clamp-2 mb-1">
+                  <div className="flex flex-col items-center justify-center relative z-10 mt-auto pt-8">
+                    <p className="font-semibold text-slate-900 dark:text-white text-xs leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors uppercase tracking-tight line-clamp-2 min-h-[24px]">
                       {p.name}
-                    </h4>
-                    <span className="text-xs font-bold text-slate-400/80 tracking-widest uppercase mb-4">
+                    </p>
+                    <p className="text-[10px] text-slate-600 dark:text-slate-400 mt-0.5 uppercase tracking-wider font-medium">
                       {p.sku}
-                    </span>
-                    
-                    <p className="text-2xl font-black text-[#10B981] drop-shadow-[0_4px_12px_rgba(16,185,129,0.3)] mb-4">
+                    </p>
+                    <p className="mt-1.5 font-black text-emerald-600 dark:text-emerald-400 text-sm">
                       {formatCurrency(p.price)}
                     </p>
+                    <div className={`text-[9px] mt-1 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                      p.stock <= p.minStock ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                    }`}>
+                      {p.stock - (cartItem?.quantity || 0)} available
+                    </div>
                   </div>
-
-                  {/* Inventory Badge - Pill Style */}
-                  <div className={`mt-auto px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest backdrop-blur-md border transition-all duration-300 ${
-                    p.stock <= p.minStock ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' : 'bg-slate-800/80 border-white/5 text-[#10B981] group-hover:border-indigo-500/30'
-                  }`}>
-                    {p.stock - (cartItem?.quantity || 0)} AVAILABLE
-                  </div>
-                </div>
-
-                {/* Inspect Info Trigger (Top Left) */}
-                <button 
-                  onClick={(e) => { e.stopPropagation(); setSelectedProduct(p); }}
-                  className="absolute top-5 left-6 w-8 h-8 rounded-full bg-white/5 backdrop-blur-md flex items-center justify-center text-slate-400 opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-all duration-300 z-20"
-                >
-                  <Search className="w-3.5 h-3.5" />
                 </button>
+              );
+            })}
+          </div>
+
+          {/* View More Products */}
+          {visibleCount < filteredProducts.length && (
+            <div className="mt-8 flex justify-center">
+              <button 
+                onClick={() => setVisibleCount(prev => prev + 20)}
+                className="px-8 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 hover:text-indigo-500 hover:border-indigo-500/30 transition-all shadow-sm active:scale-95"
+              >
+                View More Products
               </button>
-            );
-          })}
+            </div>
+          )}
+
+          {filteredProducts.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-20 bg-slate-900/10 dark:bg-slate-900/40 rounded-[32px] border border-dashed border-slate-700/20">
+              <ShoppingCart className="w-10 h-10 text-slate-300 dark:text-slate-700 mb-4" />
+              <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">No products match your criteria</p>
+            </div>
+          )}
+        </div>
           {filteredProducts.length === 0 && (
             <div className="col-span-full flex flex-col items-center justify-center py-20 bg-slate-900/40 rounded-[40px] border border-dashed border-slate-700/50">
               <div className="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center mb-6 text-slate-600">
