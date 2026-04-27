@@ -1,4 +1,5 @@
 'use client';
+// Build trigger: 2026-04-27-1835
 import { useState, useEffect } from 'react';
 import { usePOSStore } from '@/lib/store';
 import { APP_CONFIG, formatCurrency } from '@/lib/config';
