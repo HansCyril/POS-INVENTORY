@@ -398,21 +398,49 @@ export default function POSPage() {
             <div className="p-6 space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-2xl border border-slate-100 dark:border-white/5">
-                  <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Price</p>
+                  <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Selling Price</p>
                   <p className="text-xl font-black text-indigo-600 dark:text-indigo-400">{formatCurrency(selectedProduct.price)}</p>
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-2xl border border-slate-100 dark:border-white/5">
-                  <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Stock Status</p>
+                  <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Unit Cost</p>
+                  <p className="text-xl font-black text-slate-600 dark:text-slate-300">{formatCurrency(selectedProduct.cost)}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-emerald-500/5 dark:bg-emerald-500/10 p-3 rounded-2xl border border-emerald-500/20">
+                  <p className="text-[10px] font-black text-emerald-600/60 dark:text-emerald-400/60 uppercase tracking-widest mb-1">Profit Margin</p>
                   <div className="flex items-center gap-2">
-                    <p className={`text-xl font-black ${selectedProduct.stock <= selectedProduct.minStock ? 'text-rose-500' : 'text-emerald-500'}`}>{selectedProduct.stock}</p>
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">units</span>
+                    <p className="text-xl font-black text-emerald-600 dark:text-emerald-400">
+                      {selectedProduct.price > 0 
+                        ? (((selectedProduct.price - selectedProduct.cost) / selectedProduct.price) * 100).toFixed(1)
+                        : '0.0'}%
+                    </p>
+                    <TrendingUp className="w-4 h-4 text-emerald-500" />
                   </div>
+                </div>
+                <div className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-2xl border border-slate-100 dark:border-white/5">
+                  <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Stock Health</p>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full animate-pulse ${
+                      selectedProduct.stock === 0 ? 'bg-rose-600' : 
+                      selectedProduct.stock <= selectedProduct.minStock ? 'bg-amber-500' : 'bg-emerald-500'
+                    }`}></div>
+                    <p className={`text-sm font-black uppercase tracking-tight ${
+                      selectedProduct.stock === 0 ? 'text-rose-600' : 
+                      selectedProduct.stock <= selectedProduct.minStock ? 'text-amber-500' : 'text-emerald-500'
+                    }`}>
+                      {selectedProduct.stock === 0 ? 'Out of Stock' : 
+                       selectedProduct.stock <= selectedProduct.minStock ? 'Low Stock' : 'Healthy'}
+                    </p>
+                  </div>
+                  <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-1">{selectedProduct.stock} / {selectedProduct.minStock} (Min)</p>
                 </div>
               </div>
 
               {selectedProduct.description && (
                 <div>
-                  <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Description</p>
+                  <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Internal Description</p>
                   <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium bg-slate-50 dark:bg-slate-800/20 p-4 rounded-2xl border border-slate-100 dark:border-white/5 italic">
                     "{selectedProduct.description}"
                   </p>
